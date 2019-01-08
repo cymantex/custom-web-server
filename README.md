@@ -1,5 +1,8 @@
+## Important note
+This was developed as a learning experience and should not be used in a production environment.
+
 ## Custom web server
-This is an example of a web server written from scratch using Node.js streams. This was developed as a learning experience and should not be used on a production environment. The code is based on a guide you can find here: 
+This is an example of a web server written from scratch using Node.js streams. The code is based on a guide you can find here: 
 https://www.codementor.io/ziad-saab/let-s-code-a-web-server-from-scratch-with-nodejs-streams-h4uc9utji
 
 ## Sample usage
@@ -41,8 +44,10 @@ const handleRequest = ({request, response, error}) => {
     }
 };
 
-new Server().listen(3000, handleRequest).catch(err => {
-    console.error(err);
-    process.exit(1);
-});
+new Server({port: 3000})
+    .start(handleRequest)
+    .catch(async err => {
+        console.error(err);
+        process.exit(1);
+    });
 ```
