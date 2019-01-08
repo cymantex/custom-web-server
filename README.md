@@ -1,5 +1,5 @@
 ## Custom web server
-This is an example of a web server written from scratch using Node.js streams. This was developed based on a guide you can find here: 
+This is an example of a web server written from scratch using Node.js streams. This was developed as a learning experience and should not be used on a production environment. The code is based on a guide you can find here: 
 https://www.codementor.io/ziad-saab/let-s-code-a-web-server-from-scratch-with-nodejs-streams-h4uc9utji
 
 ## Sample usage
@@ -15,6 +15,7 @@ const handleRequest = ({request, response, error}) => {
 
     switch(request.url){
     case "/":
+        //The response will set an appropriate content-type automatically if none is provided.
         response.send(`
             <html lang="en">
                 <head><title>Custom Server</title></head>
