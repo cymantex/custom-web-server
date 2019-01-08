@@ -18,13 +18,6 @@ const handleRequest = ({request, response, error}) => {
 
     switch(request.url){
     case "/":
-        
-        response.send(`
-            <html lang="en">
-                <head><title>Custom Server</title></head>
-                <body><h1>This is a sample HTML response</h1></body>
-            </html>
-        `);
         break;
     case "/xml":
         //The response will set an appropriate content-type automatically if none is provided.
