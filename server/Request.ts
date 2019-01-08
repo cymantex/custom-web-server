@@ -12,6 +12,16 @@ export class Request {
         this.readHeader(socket);
     }
 
+    public readBody(): string {
+        let buffer = Buffer.alloc(0);
+        let chunk;
+        while((chunk = this.body.read()) !== null) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+
+        return buffer.toString();
+    }
+
     /**
      * Reads the http header and leaves the body as a readable socket.
      * @param socket containing a http request.
@@ -28,6 +38,7 @@ export class Request {
                 socket.unshift(buffer.slice(requestHeaderEnd + 4));
                 this.parseHeader(buffer.slice(0, requestHeaderEnd).toString());
                 this.body = socket;
+                break;
             }
         }
     }

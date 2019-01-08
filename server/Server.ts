@@ -2,7 +2,7 @@ import net, {Server as TcpServer, Socket} from "net";
 import {Response} from "./Response";
 import {Request} from "./Request";
 
-export type HttpRequest = {request: Request, response: Response};
+export type HttpRequest = {request?: Request, response?: Response, error?: Error};
 export type RequestHandler = (httpRequest: HttpRequest) => any;
 
 export class Server {
@@ -15,8 +15,16 @@ export class Server {
     public async listen(port: number, requestHandler: RequestHandler): Promise<TcpServer> {
         return new Promise(resolve => {
             this.server.on("connection", async (socket) => {
-                const httpRequest = await Server.onConnection(socket);
-                requestHandler(httpRequest);
+                try {
+                    const httpRequest = await Server.onConnection(socket);
+                    requestHandler(httpRequest);
+                } catch(error){
+                    console.error(error.message);
+                    requestHandler({
+                        response: new Response(socket),
+                        error
+                    });
+                }
             });
             resolve(this.server.listen(port));
         });
@@ -31,12 +39,16 @@ export class Server {
     }
 
     private static async onConnection(socket: Socket): Promise<HttpRequest> {
-        return new Promise(resolve => {
-            socket.once("readable", async () => {
-                resolve({
-                    request: new Request(socket),
-                    response: new Response(socket)
-                });
+        return new Promise((resolve, reject) => {
+            socket.once("readable", () => {
+                try {
+                    resolve({
+                        request: new Request(socket),
+                        response: new Response(socket)
+                    });
+                } catch(error){
+                    reject(error);
+                }
             });
         });
     }

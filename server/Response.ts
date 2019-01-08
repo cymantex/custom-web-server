@@ -1,5 +1,5 @@
 import {Socket} from "net";
-import {Header, headerEnd} from "./header";
+import {Header} from "./header";
 
 export class Response {
     private socket: Socket;
@@ -7,7 +7,6 @@ export class Response {
     private statusText: string;
     private protocol: string;
     private hasSentHeaders: boolean;
-    private isChunked: boolean;
     private readonly header: Header;
 
     constructor(socket: Socket) {
@@ -16,7 +15,6 @@ export class Response {
         this.statusText = "OK";
         this.protocol = "HTTP/1.1";
         this.hasSentHeaders = false;
-        this.isChunked = false;
         this.header = {server: "custom-server"};
     }
 
@@ -26,44 +24,6 @@ export class Response {
         });
 
         return this;
-    }
-
-    public send(): void {
-        this.checkHeadersNotSent();
-        this.hasSentHeaders = true;
-        this.addHeaders({"date": new Date().toUTCString()});
-        this.socket.write(`${this.protocol} ${this.status} ${this.statusText}\r\n`);
-        Object.keys(this.header).forEach(headerKey => {
-            this.socket.write(`${headerKey}: ${this.header[headerKey]}\r\n`);
-        });
-        this.socket.write("\r\n");
-    }
-
-    public write(chunk: Buffer): void {
-        if(!this.hasSentHeaders){
-            if(!this.header["content-length"]){
-                this.isChunked = true;
-                this.addHeaders({"transfer-encoding": "chunked"});
-            }
-            this.send();
-        }
-
-        this.writeChunk(chunk);
-    }
-
-    public end(chunk: any): void {
-        if(!this.hasSentHeaders){
-            if(!this.header["content-length"]){
-                this.addHeaders({"content-length": chunk ? chunk.length : 0});
-            }
-            this.send();
-        }
-
-        this.writeChunk(chunk);
-
-        if(this.isChunked){
-            this.socket.end(`0${headerEnd}`);
-        }
     }
 
     public setProtocol(protocol: string): Response {
@@ -77,33 +37,65 @@ export class Response {
         return this;
     };
 
+    public send(data: any = ""): void {
+        if(typeof data === "string"){
+            const string = data.trim();
+
+            if(!this.header["content-type"]){
+                this.setContentTypeByString(string);
+            }
+
+            this.end(string);
+        } else {
+            this.json(data);
+        }
+    }
+
+    public end(data: any = ""): void {
+        if(!this.header["content-length"]){
+            this.addHeaders({"content-length": data.length});
+        }
+
+        this.sendHeaders().then(() => this.socket.end(data));
+    }
+
     public json(data: object): void {
-        this.checkHeadersNotSent();
-        const json = new Buffer(JSON.stringify(data));
+        const json = Buffer.from(JSON.stringify(data, null, 4));
         this.addHeaders({
             "content-type": "application/json; charset=utf-8",
             "content-length": json.length
         });
-        this.send();
-        this.socket.end(json);
+
+        this.sendHeaders().then(() => this.socket.end(json));
     }
 
-    private checkHeadersNotSent(): void {
+    private async sendHeaders(): Promise<void> {
         if(this.hasSentHeaders){
             throw new Error("Headers have already been sent.");
         }
+
+        this.hasSentHeaders = true;
+        this.addHeaders({"date": new Date().toUTCString()});
+
+        await this.write(`${this.protocol} ${this.status} ${this.statusText}\r\n`);
+        await Promise.all(Object.keys(this.header)
+            .map(key => this.write(`${key}: ${this.header[key]}\r\n`)));
+        await this.write("\r\n");
     }
 
-    private writeChunk(chunk: any): void {
-        if(this.isChunked){
-            if(chunk){
-                const size = (chunk.length).toString(16);
-                this.socket.write(`${size}\r\n`);
-                this.socket.write(chunk);
-                this.socket.write("\r\n");
-            }
+    private async write(data: any){
+        return new Promise(resolve => {
+            this.socket.write(data, () => resolve());
+        });
+    }
+
+    private setContentTypeByString(string: string){
+        if(string.startsWith("<html") && string.endsWith("</html>")){
+            this.addHeaders({"content-type": "text/html"});
+        } else if(string.startsWith("<?xml")) {
+            this.addHeaders({"content-type": "text/xml"});
         } else {
-            this.socket.end(chunk);
+            this.addHeaders({"content-type": "text/plain"});
         }
     }
 }
