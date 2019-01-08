@@ -18,7 +18,7 @@ const handleRequest = ({request, response, error}) => {
 
     switch(request.url){
     case "/":
-        //The response will set an appropriate content-type automatically if none is provided.
+        
         response.send(`
             <html lang="en">
                 <head><title>Custom Server</title></head>
@@ -27,6 +27,7 @@ const handleRequest = ({request, response, error}) => {
         `);
         break;
     case "/xml":
+        //The response will set an appropriate content-type automatically if none is provided.
         response.send(`
             <?xml version="1.0" encoding="UTF-8"?>
             <sample>This is a sample XML response</sample>
@@ -43,6 +44,14 @@ const handleRequest = ({request, response, error}) => {
         break;
     }
 };
+
+//It's also possible to map specific routes and methods to a unique request handler.
+server.get("/", ({response}) => response.send(`
+    <html lang="en">
+        <head><title>Custom Server</title></head>
+        <body><h1>This is a sample HTML response</h1></body>
+    </html>
+`));
 
 new Server({port: 3000})
     .start(handleRequest)
