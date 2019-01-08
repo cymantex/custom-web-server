@@ -28,7 +28,7 @@ export class Server {
             ? options.defaultRequestHandler : () => {};
     }
 
-    public use(route: string, handler: RequestHandler){
+    public all(route: string, handler: RequestHandler){
         this.registerRequestHandler("ALL", route, handler);
     }
 
