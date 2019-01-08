@@ -8,14 +8,6 @@ const handleRequest = ({request, response, error}: HttpRequest) => {
     }
 
     switch(request.url){
-    case "/":
-        response.send(`
-            <html lang="en">
-                <head><title>Custom Server</title></head>
-                <body><h1>This is a sample HTML response</h1></body>
-            </html>
-        `);
-        break;
     case "/xml":
         response.send(`
             <?xml version="1.0" encoding="UTF-8"?>
@@ -34,9 +26,18 @@ const handleRequest = ({request, response, error}: HttpRequest) => {
     }
 };
 
-new Server({port: 3000})
+const server = new Server({port: 3000});
+
+server.get("/", ({response}) => response.send(`
+    <html lang="en">
+        <head><title>Custom Server</title></head>
+        <body><h1>This is a sample HTML response</h1></body>
+    </html>
+`));
+
+server
     .start(handleRequest)
-    .catch(async err => {
+    .catch(err => {
         console.error(err);
         process.exit(1);
     });
