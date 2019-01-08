@@ -13,13 +13,14 @@
     "ts-mocha": "^2.0.0"
   },
   "dependencies": {
+    "@types/node": "^10.12.11",
     "ts-node": "^7.0.1",
     "typescript": "^3.2.1"
   },
   "scripts": {
     "build": "tsc",
     "start": "cross-env NODE_ENV=production node build/index.js",
-    "dev": "nodemon",
+    "dev": "ts-node server/index.ts",
     "test": "cross-env NODE_ENV=test ts-mocha server/test/**/*.ts --timeout 10000"
   }
 }
