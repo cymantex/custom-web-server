@@ -4,15 +4,20 @@ import {Request} from "./Request";
 
 export type HttpRequest = {request?: Request, response?: Response, error?: Error};
 export type RequestHandler = (httpRequest: HttpRequest) => any;
+export interface Options {
+    port: number
+}
 
 export class Server {
-    server: TcpServer;
+    private server: TcpServer;
+    private options: Options;
 
-    public constructor(){
+    public constructor(options: Options){
         this.server = net.createServer();
+        this.options = options;
     }
 
-    public async listen(port: number, requestHandler: RequestHandler): Promise<TcpServer> {
+    public async start(requestHandler: RequestHandler): Promise<TcpServer> {
         return new Promise(resolve => {
             this.server.on("connection", async (socket) => {
                 try {
@@ -26,11 +31,11 @@ export class Server {
                     });
                 }
             });
-            resolve(this.server.listen(port));
+            resolve(this.server.listen(this.options.port));
         });
     }
 
-    public async close(){
+    public async stop(){
         if(this.server.listening){
             return new Promise(resolve => {
                 this.server.close(() => resolve());

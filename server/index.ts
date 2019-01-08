@@ -34,7 +34,9 @@ const handleRequest = ({request, response, error}: HttpRequest) => {
     }
 };
 
-new Server().listen(3000, handleRequest).catch(err => {
-    console.error(err);
-    process.exit(1);
-});
+new Server({port: 3000})
+    .start(handleRequest)
+    .catch(async err => {
+        console.error(err);
+        process.exit(1);
+    });
