@@ -18,7 +18,7 @@ const handleRequest = ({request, response, error}) => {
 
     switch(request.url){
     case "/xml":
-        //The response will set an appropriate content-type automatically if none is provided.
+        //The response will try to set an appropriate content-type automatically if none is provided.
         response.send(`
             <?xml version="1.0" encoding="UTF-8"?>
             <sample>This is a sample XML response</sample>
